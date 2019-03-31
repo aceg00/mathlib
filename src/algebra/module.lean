@@ -100,13 +100,6 @@ instance semiring.to_semimodule [r : semiring α] : semimodule α α :=
 instance ring.to_module [r : ring α] : module α α :=
 { ..semiring.to_semimodule }
 
-instance add_comm_group.module [add_comm_group α] : module ℤ α := module.of_core
-{ smul := gsmul,
-  mul_smul := λ r s x, gsmul_mul x r s,
-  smul_add := λ r x y, gsmul_add x y r,
-  add_smul := λ r s x, add_gsmul x r s,
-  one_smul := one_gsmul }
-
 class is_linear_map (α : Type u) {β : Type v} {γ : Type w}
   [ring α] [add_comm_group β] [add_comm_group γ] [module α β] [module α γ]
   (f : β → γ) : Prop :=
@@ -167,14 +160,6 @@ def id : β →ₗ[α] β := ⟨id, by simp, by simp⟩
 @[simp] lemma id_apply (x : β) : @id α β _ _ _ x = x := rfl
 
 end linear_map
-
-def is_add_group_hom.to_linear_map [add_comm_group α] [add_comm_group β]
-  (f : α → β) [is_add_group_hom f] : α →ₗ[ℤ] β :=
-{ to_fun := f,
-  add := is_add_group_hom.add f,
-  smul := λ i x, int.induction_on i (by rw [zero_smul, zero_smul, is_add_group_hom.zero f])
-    (λ i ih, by rw [add_smul, add_smul, is_add_group_hom.add f, ih, one_smul, one_smul])
-    (λ i ih, by rw [sub_smul, sub_smul, is_add_group_hom.sub f, ih, one_smul, one_smul]) }
 
 namespace is_linear_map
 variables [ring α] [add_comm_group β] [add_comm_group γ]
@@ -360,3 +345,11 @@ instance : module ℤ M :=
   smul_zero := gsmul_zero }
 
 end add_comm_group
+
+def is_add_group_hom.to_linear_map [add_comm_group α] [add_comm_group β]
+  (f : α → β) [is_add_group_hom f] : α →ₗ[ℤ] β :=
+{ to_fun := f,
+  add := is_add_group_hom.add f,
+  smul := λ i x, int.induction_on i (by rw [zero_smul, zero_smul, is_add_group_hom.zero f])
+    (λ i ih, by rw [add_smul, add_smul, is_add_group_hom.add f, ih, one_smul, one_smul])
+    (λ i ih, by rw [sub_smul, sub_smul, is_add_group_hom.sub f, ih, one_smul, one_smul]) }
