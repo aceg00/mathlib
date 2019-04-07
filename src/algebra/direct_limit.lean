@@ -26,7 +26,7 @@ open lattice submodule
 
 variables {R : Type u} [ring R]
 variables {ι : Type v} [nonempty ι]
-variables [directed_order ι] [decidable_eq ι]
+variables [directed_preorder ι] [decidable_eq ι]
 variables (G : ι → Type w) [Π i, decidable_eq (G i)]
 
 /-- A directed system is a functor from the category (directed poset) to another category.
@@ -73,7 +73,7 @@ nonempty.elim (by apply_instance) $ assume ind : ι,
 quotient.induction_on' z $ λ z, direct_sum.induction_on z
   ⟨ind, 0, linear_map.map_zero _⟩
   (λ i x, ⟨i, x, rfl⟩)
-  (λ p q ⟨i, x, ihx⟩ ⟨j, y, ihy⟩, let ⟨k, hik, hjk⟩ := directed_order.directed i j in
+  (λ p q ⟨i, x, ihx⟩ ⟨j, y, ihy⟩, let ⟨k, hik, hjk⟩ := directed_preorder.directed i j in
     ⟨k, f i k hik x + f j k hjk y, by rw [linear_map.map_add, of_f, of_f, ihx, ihy]; refl⟩)
 
 @[elab_as_eliminator]
@@ -134,7 +134,7 @@ lemma of.zero_exact_aux {x : direct_sum ι G} (H : submodule.quotient.mk x = (0 
   ∃ j, (∀ k ∈ x.support, k ≤ j) ∧ direct_sum.to_module R ι (G j) (λ i, totalize G f i j) x = (0 : G j) :=
 nonempty.elim (by apply_instance) $ assume ind : ι,
 span_induction ((quotient.mk_eq_zero _).1 H)
-  (λ x ⟨i, j, hij, y, hxy⟩, let ⟨k, hik, hjk⟩ := directed_order.directed i j in
+  (λ x ⟨i, j, hij, y, hxy⟩, let ⟨k, hik, hjk⟩ := directed_preorder.directed i j in
     ⟨k, begin
       clear_,
       subst hxy,
@@ -150,7 +150,7 @@ span_induction ((quotient.mk_eq_zero _).1 H)
     end⟩)
   ⟨ind, λ _ h, (finset.not_mem_empty _ h).elim, linear_map.map_zero _⟩
   (λ x y ⟨i, hi, hxi⟩ ⟨j, hj, hyj⟩,
-    let ⟨k, hik, hjk⟩ := directed_order.directed i j in
+    let ⟨k, hik, hjk⟩ := directed_preorder.directed i j in
     ⟨k, λ l hl,
       (finset.mem_union.1 (dfinsupp.support_add hl)).elim
         (λ hl, le_trans (hi _ hl) hik)
@@ -317,10 +317,10 @@ quotient.induction_on' z $ λ x, free_abelian_group.induction_on x
   ⟨ind, 0, of_zero ind⟩
   (λ s, multiset.induction_on s
     ⟨ind, 1, of_one ind⟩
-    (λ a s ih, let ⟨i, x⟩ := a, ⟨j, y, hs⟩ := ih, ⟨k, hik, hjk⟩ := directed_order.directed i j in
+    (λ a s ih, let ⟨i, x⟩ := a, ⟨j, y, hs⟩ := ih, ⟨k, hik, hjk⟩ := directed_preorder.directed i j in
       ⟨k, f i k hik x * f j k hjk y, by rw [of_mul, of_f, of_f, hs]; refl⟩))
   (λ s ⟨i, x, ih⟩, ⟨i, -x, by rw [of_neg, ih]; refl⟩)
-  (λ p q ⟨i, x, ihx⟩ ⟨j, y, ihy⟩, let ⟨k, hik, hjk⟩ := directed_order.directed i j in
+  (λ p q ⟨i, x, ihx⟩ ⟨j, y, ihy⟩, let ⟨k, hik, hjk⟩ := directed_preorder.directed i j in
     ⟨k, f i k hik x + f j k hjk y, by rw [of_add, of_f, of_f, ihx, ihy]; refl⟩)
 
 @[elab_as_eliminator] theorem induction_on {C : direct_limit G f → Prop} (z : direct_limit G f)
@@ -386,7 +386,7 @@ begin
     refine ⟨ind, ∅, λ _, false.elim, is_supported_zero, _⟩,
     rw [restriction_zero, lift_zero] },
   { rintros x y ⟨i, s, hi, hxs, ihs⟩ ⟨j, t, hj, hyt, iht⟩,
-    rcases directed_order.directed i j with ⟨k, hik, hjk⟩,
+    rcases directed_preorder.directed i j with ⟨k, hik, hjk⟩,
     have : ∀ z : Σ i, G i, z ∈ s ∪ t → z.1 ≤ k,
     { rintros z (hz | hz), exact le_trans (hi z hz) hik, exact le_trans (hj z hz) hjk },
     refine ⟨k, s ∪ t, this, is_supported_add (is_supported_upwards hxs $ set.subset_union_left s t)
@@ -398,7 +398,7 @@ begin
   { rintros x y ⟨j, t, hj, hyt, iht⟩, rw smul_eq_mul,
     rcases exists_finset_support x with ⟨s, hxs⟩,
     rcases (s.image sigma.fst).exists_le with ⟨i, hi⟩,
-    rcases directed_order.directed i j with ⟨k, hik, hjk⟩,
+    rcases directed_preorder.directed i j with ⟨k, hik, hjk⟩,
     have : ∀ z : Σ i, G i, z ∈ ↑s ∪ t → z.1 ≤ k,
     { rintros z (hz | hz), exact le_trans (hi z.1 $ finset.mem_image.2 ⟨z, hz, rfl⟩) hik, exact le_trans (hj z hz) hjk },
     refine ⟨k, ↑s ∪ t, this, is_supported_mul (is_supported_upwards hxs $ set.subset_union_left ↑s t)
@@ -518,6 +518,11 @@ protected noncomputable def field : field (ring.direct_limit G f) :=
   inv_mul_cancel := λ p, direct_limit.inv_mul_cancel G f,
   .. direct_limit.nonzero_comm_ring G f }
 end
+
+protected noncomputable def discrete_field : discrete_field (ring.direct_limit G f) :=
+{ has_decidable_eq := classical.dec_eq _,
+  inv_zero := dif_pos rfl,
+  ..field.direct_limit.field G f }
 
 end direct_limit
 
