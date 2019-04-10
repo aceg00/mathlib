@@ -215,10 +215,10 @@ linear_map.is_add_group_hom _
 @[simp] lemma of_f {i j} (hij) (x) : of G f j (f i j hij x) = of G f i x :=
 module.direct_limit.of_f
 
-@[simp] lemma of_zero (i) : of G f i 0 = 0 := is_add_group_hom.zero _
-@[simp] lemma of_add (i x y) : of G f i (x + y) = of G f i x + of G f i y := is_add_group_hom.add _ _ _
-@[simp] lemma of_neg (i x) : of G f i (-x) = -of G f i x := is_add_group_hom.neg _ _
-@[simp] lemma of_sub (i x y) : of G f i (x - y) = of G f i x - of G f i y := is_add_group_hom.sub _ _ _
+@[simp] lemma of_zero (i) : of G f i 0 = 0 := is_add_group_hom.map_zero _
+@[simp] lemma of_add (i x y) : of G f i (x + y) = of G f i x + of G f i y := is_add_group_hom.map_add _ _ _
+@[simp] lemma of_neg (i x) : of G f i (-x) = -of G f i x := is_add_group_hom.map_neg _ _
+@[simp] lemma of_sub (i x y) : of G f i (x - y) = of G f i x - of G f i y := is_add_group_hom.map_sub _ _ _
 
 @[elab_as_eliminator]
 protected theorem induction_on {C : direct_limit G f → Prop} (z : direct_limit G f)
@@ -249,10 +249,10 @@ linear_map.is_add_group_hom _
 @[simp] lemma lift_of (i x) : lift G f P g Hg (of G f i x) = g i x :=
 module.direct_limit.lift_of _ _ _
 
-@[simp] lemma lift_zero : lift G f P g Hg 0 = 0 := is_add_group_hom.zero _
-@[simp] lemma lift_add (x y) : lift G f P g Hg (x + y) = lift G f P g Hg x + lift G f P g Hg y := is_add_group_hom.add _ _ _
-@[simp] lemma lift_neg (x) : lift G f P g Hg (-x) = -lift G f P g Hg x := is_add_group_hom.neg _ _
-@[simp] lemma lift_sub (x y) : lift G f P g Hg (x - y) = lift G f P g Hg x - lift G f P g Hg y := is_add_group_hom.sub _ _ _
+@[simp] lemma lift_zero : lift G f P g Hg 0 = 0 := is_add_group_hom.map_zero _
+@[simp] lemma lift_add (x y) : lift G f P g Hg (x + y) = lift G f P g Hg x + lift G f P g Hg y := is_add_group_hom.map_add _ _ _
+@[simp] lemma lift_neg (x) : lift G f P g Hg (-x) = -lift G f P g Hg x := is_add_group_hom.map_neg _ _
+@[simp] lemma lift_sub (x y) : lift G f P g Hg (x - y) = lift G f P g Hg x - lift G f P g Hg y := is_add_group_hom.map_sub _ _ _
 
 lemma lift_unique (F : direct_limit G f → P) [is_add_group_hom F] (x) :
   F x = lift G f P (λ i x, F $ of G f i x) (λ i j hij x, by rw of_f) x :=

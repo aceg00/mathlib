@@ -394,7 +394,7 @@ end add_comm_group
 def is_add_group_hom.to_linear_map [add_comm_group α] [add_comm_group β]
   (f : α → β) [is_add_group_hom f] : α →ₗ[ℤ] β :=
 { to_fun := f,
-  add := is_add_group_hom.add f,
-  smul := λ i x, int.induction_on i (by rw [zero_smul, zero_smul, is_add_group_hom.zero f])
-    (λ i ih, by rw [add_smul, add_smul, is_add_group_hom.add f, ih, one_smul, one_smul])
-    (λ i ih, by rw [sub_smul, sub_smul, is_add_group_hom.sub f, ih, one_smul, one_smul]) }
+  add := is_add_group_hom.map_add f,
+  smul := λ i x, int.induction_on i (by rw [zero_smul, zero_smul, is_add_group_hom.map_zero f])
+    (λ i ih, by rw [add_smul, add_smul, is_add_group_hom.map_add f, ih, one_smul, one_smul])
+    (λ i ih, by rw [sub_smul, sub_smul, is_add_group_hom.map_sub f, ih, one_smul, one_smul]) }
