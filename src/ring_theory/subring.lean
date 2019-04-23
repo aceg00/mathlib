@@ -52,6 +52,10 @@ instance set_inclusion.is_ring_hom {s t : set R} [is_subring s] [is_subring t] (
   is_ring_hom (set.inclusion h) :=
 subtype_mk.is_ring_hom _ _
 
+instance equiv.set.range.is_ring_hom {γ : Type*} [ring γ] (f : R → γ)
+  (hf : function.injective f) [is_ring_hom f] : is_ring_hom (equiv.set.range f hf) :=
+subtype_mk.is_ring_hom f _
+
 variables {cR : Type u} [comm_ring cR]
 
 instance subset.comm_ring {S : set cR} [is_subring S] : comm_ring S :=

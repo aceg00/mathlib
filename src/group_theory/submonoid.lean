@@ -101,6 +101,7 @@ lemma image.is_submonoid {γ : Type*} [monoid γ] (f : α → γ) [is_monoid_hom
   mul_mem := λ a b ⟨x, hx⟩ ⟨y, hy⟩, ⟨x * y, is_submonoid.mul_mem hx.1 hy.1,
     by rw [is_monoid_hom.map_mul f, hx.2, hy.2]⟩ }
 
+@[to_additive range.is_add_submonoid]
 instance range.is_submonoid {γ : Type*} [monoid γ] (f : α → γ) [is_monoid_hom f] :
   is_submonoid (set.range f) :=
 by rw ← set.image_univ; apply_instance
@@ -198,6 +199,11 @@ instance subtype_mk.is_monoid_hom {γ : Type*} [monoid γ] [is_submonoid s] (f :
 instance set_inclusion.is_monoid_hom (t : set α) [is_submonoid s] [is_submonoid t] (h : s ⊆ t) :
   is_monoid_hom (set.inclusion h) :=
 subtype_mk.is_monoid_hom _ _
+
+@[to_additive equiv.set.range.is_add_monoid_hom]
+instance equiv.set.range.is_monoid_hom {γ : Type*} [monoid γ] (f : α → γ)
+  (hf : function.injective f) [is_monoid_hom f] : is_monoid_hom (equiv.set.range f hf) :=
+subtype_mk.is_monoid_hom f _
 
 namespace monoid
 

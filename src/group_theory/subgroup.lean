@@ -587,6 +587,15 @@ instance set_inclusion.is_add_group_hom [add_group α] {s t : set α}
 subtype_mk.is_add_group_hom _ _
 attribute [to_additive set_inclusion.is_group_hom] set_inclusion.is_add_group_hom
 
+instance equiv.set.range.is_group_hom [group α] [group β] (f : α → β)
+  (hf : function.injective f) [is_group_hom f] : is_group_hom (equiv.set.range f hf) :=
+subtype_mk.is_group_hom f _
+
+instance equiv.set.range.is_add_group_hom [add_group α] [add_group β] (f : α → β)
+  (hf : function.injective f) [is_add_group_hom f] : is_add_group_hom (equiv.set.range f hf) :=
+subtype_mk.is_add_group_hom f _
+attribute [to_additive equiv.set.range.is_add_group_hom] equiv.set.range.is_group_hom
+
 section simple_group
 
 class simple_group (α : Type*) [group α] : Prop :=

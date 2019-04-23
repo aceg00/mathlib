@@ -12,10 +12,12 @@ mul_equiv, and ring_equiv, which are datatypes representing isomorphisms
 of monoids, groups and rings.
 
 -/
-import data.equiv.basic algebra.field
+import data.equiv.basic algebra.field ring_theory.subring
 
 universes u v w x
 variables {α : Type u} {β : Type v} {γ : Type w} {δ : Type x}
+
+open function
 
 namespace equiv
 
@@ -221,6 +223,11 @@ variables [has_add α] [has_add β] [has_add γ]
 { hom := is_add_hom.comp h1.hom h2.hom,
   ..equiv.trans h1.to_equiv h2.to_equiv }
 
+noncomputable def set.range {α β : Type*} [add_monoid α] [add_monoid β] (f : α → β)
+  [is_add_monoid_hom f] (hf : injective f) : α ≃+ set.range f :=
+{ to_equiv := equiv.set.range f hf,
+  hom := by apply_instance }
+
 end add_equiv
 
 structure mul_equiv (α β : Type*) [has_mul α] [has_mul β] extends α ≃ β :=
@@ -244,6 +251,11 @@ variables [has_mul α] [has_mul β] [has_mul γ]
 @[trans] def trans (h1 : α ≃* β) (h2 : β ≃* γ) : (α ≃* γ) :=
 { hom := is_mul_hom.comp h1.hom h2.hom,
   ..equiv.trans h1.to_equiv h2.to_equiv }
+
+noncomputable def set.range {α β : Type*} [monoid α] [monoid β] (f : α → β)
+  [is_monoid_hom f] (hf : injective f) : α ≃* set.range f :=
+{ to_equiv := equiv.set.range f hf,
+  hom := by apply_instance }
 
 end mul_equiv
 
@@ -326,5 +338,10 @@ instance symm.is_ring_hom {e : α ≃r β} : is_ring_hom e.to_equiv.symm := hom 
 
 @[simp] lemma to_equiv_symm_apply (e : α ≃r β) (x : β) :
   e.symm.to_equiv x = e.to_equiv.symm x := rfl
+
+noncomputable def set.range (f : α → β) [is_ring_hom f] (hf : injective f) :
+  α ≃r set.range f :=
+{ to_equiv := equiv.set.range f hf,
+  hom := by apply_instance }
 
 end ring_equiv
