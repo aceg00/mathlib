@@ -42,8 +42,11 @@ ideal.quotient.is_ring_hom_mk _
 @[simp] lemma mk_self : (mk f : adjoin_root f) = 0 :=
 quotient.sound' (mem_span_singleton.2 $ by simp)
 
-instance : is_ring_hom (coe : α → adjoin_root f) :=
+instance of.is_ring_hom : is_ring_hom (of : α → adjoin_root f) :=
 @is_ring_hom.comp _ _ _ _ C _ _ _ mk mk.is_ring_hom
+
+instance coe.is_ring_hom : is_ring_hom (coe : α → adjoin_root f) :=
+of.is_ring_hom
 
 lemma eval₂_root (f : polynomial α) : f.eval₂ coe (root : adjoin_root f) = 0 :=
 quotient.induction_on' (root : adjoin_root f)
@@ -85,6 +88,8 @@ instance is_ring_hom_lift : is_ring_hom (lift i a h) :=
 by unfold lift; apply_instance
 
 end comm_ring
+
+local attribute [class] irreducible
 
 variables [discrete_field α] {f : polynomial α} [irreducible f]
 

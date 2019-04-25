@@ -328,7 +328,7 @@ quotient.induction_on' z $ λ x, free_abelian_group.induction_on x
 let ⟨i, x, hx⟩ := exists_of z in hx ▸ ih i x
 
 section of_zero_exact_aux
-attribute [instance, priority 0] classical.dec
+local attribute [instance, priority 0] classical.dec
 variables (G f)
 lemma of.zero_exact_aux2 {x : free_comm_ring Σ i, G i} {s t} (hxs : is_supported x s) {j k}
   (hj : ∀ z : Σ i, G i, z ∈ s → z.1 ≤ j) (hk : ∀ z : Σ i, G i, z ∈ t → z.1 ≤ k)
@@ -409,6 +409,7 @@ begin
 end
 end of_zero_exact_aux
 
+local attribute [instance, priority 0] classical.dec
 /-- A component that corresponds to zero in the direct limit is already zero in some
 bigger module in the directed system. -/
 lemma of.zero_exact {i x} (hix : of G f i x = 0) : ∃ j, ∃ hij : i ≤ j, f i j hij x = 0 :=
@@ -521,7 +522,7 @@ end
 
 protected noncomputable def discrete_field : discrete_field (ring.direct_limit G f) :=
 { has_decidable_eq := classical.dec_eq _,
-  inv_zero := dif_pos rfl,
+  inv_zero := by convert dif_pos rfl,
   ..field.direct_limit.field G f }
 
 end direct_limit
