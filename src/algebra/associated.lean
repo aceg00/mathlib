@@ -48,6 +48,10 @@ iff.intro
     by rwa [mul_assoc, units.mul_inv, mul_one] at this)
   (assume ⟨v, hv⟩, hv.symm ▸ ⟨v * u, (units.coe_mul v u).symm⟩)
 
+lemma is_monoid_hom.is_unit [monoid α] [monoid β] (f : α → β) [is_monoid_hom f]
+  {u : α} (hu : is_unit u) : is_unit (f u) :=
+let ⟨v, hv⟩ := hu in ⟨units.map f v, hv.symm ▸ rfl⟩
+
 theorem is_unit_of_mul_is_unit_left {α} [comm_monoid α] {x y : α}
   (hu : is_unit (x * y)) : is_unit x :=
 let ⟨z, hz⟩ := is_unit_iff_exists_inv.1 hu in
