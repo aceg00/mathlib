@@ -543,5 +543,3 @@ class directed_preorder (α : Type u) extends preorder α :=
 
 class directed_order (α : Type u) extends partial_order α :=
 (directed : ∀ i j : α, ∃ k, i ≤ k ∧ j ≤ k)
-
-end

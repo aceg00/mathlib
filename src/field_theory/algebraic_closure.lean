@@ -8,6 +8,11 @@ open polynomial zorn set function
 variables {K : Type u} [discrete_field K]
 noncomputable theory
 
+lemma injective_eq {α : Sort*} : function.injective (eq : α → α → Prop) :=
+λ _ _ h, h.symm ▸ rfl
+
+#print injective_eq
+
 section map
 
 local attribute [instance] classical.dec
@@ -52,15 +57,32 @@ instance equiv.is_ring_hom {α β : Type*} [ring β] (e : α ≃ β) :
   @is_ring_hom α β (equiv.ring e) _ e :=
 by split; simp [equiv.mul_def, equiv.add_def, equiv.one_def]
 
+/-- Given an `e : α ≃ β`, where `β` is a ring, `ring_equiv.of_equiv` will return a ring
+  isomporphism between `α` and `β`, where the ring structure on `α` is induced by `e`-/
+def equiv.to_ring_equiv {α β : Type*} [ring β] (e : α ≃ β) :
+  @ring_equiv α β (equiv.ring e) _ :=
+{ hom := equiv.is_ring_hom e,
+  to_equiv := e }
+
 instance equiv.is_ring_hom.symm {α β : Type*} [ring β] (e : α ≃ β) :
   @is_ring_hom β α _ (equiv.ring e) e.symm :=
-by letI := equiv.ring e; exact (show α ≃r β, from ⟨e, equiv.is_ring_hom e⟩).symm.2
+by letI := equiv.ring e; exact (equiv.to_ring_equiv e).symm.hom
 
 def algebraic {L : Type v} [comm_ring L] (i : K → L) (x : L) : Prop :=
 ∃ f : polynomial K, f ≠ 0 ∧ f.eval₂ i x = 0
 
 class is_algebraically_closed (K : Type u) [discrete_field K] :=
 (exists_root : ∀ f : polynomial K, 0 < degree f → ∃ x, is_root f x)
+
+lemma is_algebraically_closed_of_equiv {L : Type v} [discrete_field L]
+  [is_algebraically_closed L] (e : K ≃r L) : is_algebraically_closed K :=
+⟨λ f hf, let ⟨x, hx⟩ := is_algebraically_closed.exists_root (f.map e.to_equiv)
+    (by rwa degree_map) in
+  ⟨e.symm.to_equiv x, begin
+    rw is_root.def at *,
+    rw [← e.to_equiv.injective.eq_iff, is_ring_hom.map_zero e.to_equiv, ← hx,
+      eval_map, ← eval₂_hom (e.to_equiv)]; simp
+  end⟩⟩
 
 lemma algebraic_comp {L M : Type*} [comm_ring L] [decidable_eq L] [comm_ring M] [decidable_eq M]
   (i : K → L) (j : L → M) [is_ring_hom i] [is_ring_hom j] {x : L} :
@@ -175,6 +197,10 @@ def base_extension (K : Type u) [discrete_field K] : extension K :=
   lift_comp := λ _ _ _ _ _ ⟨_, _⟩, rfl }
 
 local attribute [instance] extension.field extension.lift_is_field_hom extension.is_field_hom
+
+def equiv_base_extension (K : Type u) [discrete_field K] :
+  K ≃r (base_extension K).carrier :=
+(equiv.set.range _ (base_embedding K).2).symm.to_ring_equiv.symm
 
 lemma base_extension.is_field_hom (e : extension K) :
   is_field_hom (@inclusion _ (base_extension K).carrier _ e.range_subset) :=
@@ -397,32 +423,12 @@ instance : discrete_field (algebraic_closure K) :=
 
 local attribute [instance] extension.field base_extension.is_field_hom
 
-def of_aux : K → (base_extension K).carrier :=
-equiv.set.range _ (base_embedding K).2
-
-lemma of_aux.is_field_hom : is_ring_hom (@of_aux K _) :=
-equiv.is_ring_hom.symm (equiv.set.range _ (base_embedding K).2).symm
-
-def of_aux_symm : (base_extension K).carrier → K :=
-(equiv.set.range _ (base_embedding K).2).symm
-
-lemma of_aux_symm.is_field_hom : is_ring_hom (@of_aux_symm K _) :=
-equiv.is_ring_hom (equiv.set.range _ (base_embedding K).2).symm
-
-local attribute [instance] of_aux.is_field_hom of_aux_symm.is_field_hom
-
 def of : K → algebraic_closure K :=
-inclusion (closed_extension K).range_subset ∘
-(@of_aux K _)
+inclusion (closed_extension K).range_subset ∘ (equiv_base_extension K).to_equiv
 
 local attribute [instance] range_base_embedding.field
 
-instance : is_field_hom (@of K _) :=
-begin
-  haveI h₁ := (closed_extension K).is_field_hom,
-  unfold of,
-  exact @is_ring_hom.comp _ _ _ _ _ _ _ _ _ h₁
-end
+instance : is_field_hom (@of K _) := is_ring_hom.comp _ _
 
 lemma of_algebraic_aux (x : algebraic_closure K) :
   @algebraic ((base_extension K).carrier) _ (algebraic_closure K) _
@@ -431,8 +437,9 @@ lemma of_algebraic_aux (x : algebraic_closure K) :
 
 lemma of_algebraic (x : algebraic_closure K) : algebraic (@of K _) x :=
 let ⟨f, hf⟩ := (closed_extension K).algebraic x in
-⟨f.map (@of_aux_symm K _), mt (map_eq_zero _).1 hf.1,
-  calc eval₂ of x (f.map of_aux_symm) = eval₂ (λ x, of (of_aux_symm x)) x f :
+⟨f.map ((equiv_base_extension K).symm.to_equiv), mt (map_eq_zero _).1 hf.1,
+  calc eval₂ of x (f.map (equiv_base_extension K).symm.to_equiv) =
+      eval₂ (λ x, of ((equiv_base_extension K).symm.to_equiv x)) x f :
     sorry
 
   ... = 0 : sorry
@@ -533,21 +540,21 @@ end
 set_option eqn_compiler.zeta true
 
 def adjoin_root_lift {α : Type u} [_inst_2_1 : discrete_field α]
-  (i : (range ⇑(base_embedding K)) → α)
+  (i : (base_extension K).carrier → α)
   [is_field_hom i] [is_algebraically_closed α] :
   (range ⇑(adjoin_root_extension_map f)) → α :=
 begin
   have h : _ := is_algebraically_closed.exists_root
     (f.map (lift_aux i))
     (by rw degree_map; exact degree_pos_of_ne_zero_of_nonunit
-      (nonzero_of_irreducible hif) hif.1),
+      (ne_zero_of_irreducible hif) hif.1),
   exact adjoin_root.lift (lift_aux i) (classical.some h) (by rw [← eval_map];
     exact (classical.some_spec h)) ∘
   (equiv.set.range _ (adjoin_root_extension_map f).2).symm
 end
 
 lemma adjoin_root_lift.is_ring_hom {α : Type u} [_inst_2_1 : discrete_field α]
-  (i : (range ⇑(base_embedding K)) → α) [is_field_hom i] [is_algebraically_closed α] :
+  (i : (base_extension K).carrier → α) [is_field_hom i] [is_algebraically_closed α] :
   is_field_hom (adjoin_root_lift f i) :=
 begin
   letI := equiv.is_ring_hom.symm (equiv.set.range _ (adjoin_root_extension_map f).2),
@@ -587,9 +594,7 @@ by letI : discrete_field (closed_extension K).carrier := extension.field _; exac
 begin
   introsI,
   show _ = adjoin_root_lift f _ _,
-  rw [adjoin_root_lift, adjoin_root_inclusion_eq', function.comp,
-    function.comp],
-  dsimp only,
+  simp only [adjoin_root_lift, adjoin_root_inclusion_eq', function.comp, function.comp],
   erw [equiv.symm_apply_apply, adjoin_root.lift_of, lift_aux]
 end⟩
 
@@ -598,19 +603,17 @@ have h : adjoin_root_extension f ≤ closed_extension K,
   from classical.some_spec (exists_algebraic_closure K)
     (adjoin_root_extension f) (closed_extension_le_adjoin_root_extension f),
 have left_inv : left_inverse (inclusion h.fst ∘ (equiv.set.range _
-  (adjoin_root_extension_map f).2)) adjoin_root.of,
-  from λ _, subtype.eq $ begin
-      rw [function.comp_app, equiv.set.range_apply, inclusion],
-      dsimp,
-      rw [adjoin_root_extension_map_apply],
-    end,
-{ to_fun := adjoin_root.of,
+    (adjoin_root_extension_map f).2)) adjoin_root.of,
+  from λ _, by simp [adjoin_root_extension_map_apply, inclusion],
+{ to_fun := coe,
   inv_fun := inclusion h.fst ∘ (equiv.set.range _ (adjoin_root_extension_map f).2),
   left_inv := left_inv,
   right_inv := right_inverse_of_injective_of_left_inverse
     (injective_comp (inclusion_injective _) (equiv.injective _))
     left_inv,
   hom := by apply_instance }
+
+end adjoin_root
 
 instance : is_algebraically_closed (algebraic_closure K) :=
 ⟨λ f hf0, let ⟨g, hg⟩ := is_noetherian_ring.exists_irreducible_factor
@@ -626,22 +629,70 @@ instance : is_algebraically_closed (algebraic_closure K) :=
       e.to_equiv.injective begin
         rw [← eval₂_hom e.to_equiv, equiv.apply_symm_apply,
           is_ring_hom.map_zero e.to_equiv, hk, eval₂_mul],
-        dsimp [e],
-        rw algebraic_closure_equiv_adjoin_root,
-        dsimp,
-        erw [adjoin_root.eval₂_root, zero_mul]
+        dsimp [e, algebraic_closure_equiv_adjoin_root],
+        rw [adjoin_root.eval₂_root, zero_mul]
       end⟩
   end⟩
 
-def lift {α : Type v} [discrete_field α] (i : K → α)
-  [is_field_hom i] [is_algebraically_closed α] (x : algebraic_closure K) : α :=
-let s : set (big_type K) := equiv.set.range (big_type_map_injective in
-(closed_extension K).lift
+local attribute [instance] extension.lift_is_field_hom
 
+lemma degree_eq_zero_of_is_unit_of_monic {α : Type u} [nonzero_comm_semiring α] [decidable_eq α]
+  {f : polynomial α} (hfu : is_unit f) (hmf : monic f) : degree f = 0 :=
+let ⟨g, hg⟩ := is_unit_iff_dvd_one.1 hfu in
+have degree (f * g) = 0, by rw [← hg, degree_one],
+have hg0 : g ≠ 0, from λ h, @zero_ne_one (polynomial α) _ $ by rw [hg, h, mul_zero],
+have hfg : f.leading_coeff * g.leading_coeff ≠ 0,
+  by rw [(show _ = _, from hmf), one_mul, ne.def, leading_coeff_eq_zero]; exact hg0,
+by rw [degree_mul_eq' hfg, nat.with_bot.add_eq_zero_iff] at this; tauto
 
-def algebraic_closure_unique {α : Type*} [discrete_field α] (i : K → α) [is_field_hom i]
-  (h : is_algebraically_closed α)
+lemma degree_eq_one_of_irreducible_of_root {α : Type u} [integral_domain α] [decidable_eq α]
+  {f : polynomial α} (hi : irreducible f) {x : α} (hx : is_root f x) : degree f = 1 :=
+by letI := nonzero_comm_ring.of_polynomial_ne (ne_zero_of_irreducible hi); exact
+let ⟨g, hg⟩ := dvd_iff_is_root.2 hx in
+have is_unit (X - C x) ∨ is_unit g, from hi.2 _ _ hg,
+this.elim
+  (λ h, have h₁ : degree (X - C x) = 1, from degree_X_sub_C x,
+    have h₂ : degree (X - C x) = 0, from degree_eq_zero_of_is_unit_of_monic h (monic_X_sub_C _),
+    by rw h₁ at h₂; exact absurd h₂ dec_trivial)
+  (λ hgu, by rw [hg, degree_mul_eq, degree_X_sub_C, degree_eq_zero_of_is_unit hgu, add_zero])
 
-end adjoin_root
+lemma irreducible_iff_degree_eq_one {α : Type u} [discrete_field α]
+  [is_algebraically_closed α] {f : polynomial α} : irreducible f ↔ degree f = 1 :=
+⟨λ hf, let ⟨x, hx⟩ := is_algebraically_closed.exists_root f
+    (degree_pos_of_ne_zero_of_nonunit (ne_zero_of_irreducible hf) hf.1) in
+    degree_eq_one_of_irreducible_of_root hf hx,
+  irreducible_of_degree_eq_one⟩
+
+set_option class.instance_max_depth 50
+
+/-- any algebraic extension of the algebraic closure is trivial -/
+/- TODO, change to any algebraically closed field -/
+lemma algebraic_extension_algebraic_closure {α : Type v} [discrete_field α]
+  (i : algebraic_closure K → α) [is_field_hom i] (h : ∀ x, algebraic i x) : bijective i :=
+⟨is_field_hom.injective i,
+λ x, let ⟨f, hf⟩ := h x in
+is_noetherian_ring.irreducible_induction_on f
+  (λ h, (h.1 rfl).elim)
+  (λ u hu h, false.elim $ @not_is_unit_zero α _ $ h.2 ▸ is_monoid_hom.is_unit (eval₂ i x) hu)
+  (begin
+    assume f p hf0 hp ih hpf,
+    rw [eval₂_mul, mul_eq_zero] at hpf,
+    cases hpf.2 with hpx hf,
+    { have : i (p.leading_coeff) ≠ 0, by rw [ne.def, is_field_hom.map_eq_zero i,
+        leading_coeff_eq_zero]; exact ne_zero_of_irreducible hp,
+      rw irreducible_iff_degree_eq_one at hp,
+      rw [eq_X_add_C_of_degree_eq_one hp, eval₂_add, eval₂_C, eval₂_mul, eval₂_C, eval₂_X,
+        add_eq_zero_iff_eq_neg] at hpx,
+      use (- p.coeff 0) / p.leading_coeff,
+      rw [is_field_hom.map_div i, is_ring_hom.map_neg i, ← hpx, mul_div_cancel_left _ this] },
+    { exact ih ⟨hf0, hf⟩ }
+  end)
+  hf⟩
+
+noncomputable def algebraic_closure_unique {α : Type v} [discrete_field α] (i : K → α)
+  [is_field_hom i] [is_algebraically_closed α] (h : ∀ x, algebraic i x) :
+  algebraic_closure K ≃r α :=
+_
+
 
 end algebraic_closure
