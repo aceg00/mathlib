@@ -6,8 +6,7 @@ Authors: Kenny Lau
 Adjoining elements to form subalgebras.
 -/
 
-import ring_theory.algebra_operations ring_theory.polynomial ring_theory.principal_ideal_domain
-import algebra.pointwise
+import ring_theory.algebra_operations ring_theory.polynomial
 
 universes u v w
 
@@ -32,7 +31,11 @@ theorem adjoin_mono (H : s ⊆ t) : adjoin R s ≤ adjoin R t :=
 closure_subset (set.subset.trans (set.union_subset_union_right _ H) subset_closure)
 
 variables (R A)
+<<<<<<< HEAD
 @[simp] theorem adjoin_empty : adjoin R (∅ : set A) = ⊥ :=
+=======
+theorem adjoin_empty : adjoin R (∅ : set A) = ⊥ :=
+>>>>>>> comm/integral-closure
 eq_bot_iff.2 $ adjoin_le $ set.empty_subset _
 variables {A}
 
@@ -46,7 +49,11 @@ le_antisymm
     (set.range_subset_iff.2 $ λ x, adjoin_mono (set.subset_union_left _ _) x.2)
     (set.subset.trans (set.subset_union_right _ _) subset_adjoin))
 
+<<<<<<< HEAD
 theorem adjoin_eq_span : (adjoin R s : submodule R A) = span R (monoid.closure s) :=
+=======
+theorem madjoin_eq_span : (adjoin R s).to_submodule = span R (monoid.closure s) :=
+>>>>>>> comm/integral-closure
 begin
   apply le_antisymm,
   { intros r hr, rcases ring.exists_list_of_mem_closure hr with ⟨L, HL, rfl⟩, clear hr,
@@ -89,6 +96,7 @@ le_antisymm
     (λ n r ih, by rw [pow_succ', ← ring.mul_assoc, alg_hom.map_mul, polynomial.aeval_def _ _ _ polynomial.X,
       polynomial.eval₂_X]; exact is_submonoid.mul_mem ih (subset_adjoin $ or.inl rfl)))
 
+<<<<<<< HEAD
 theorem adjoin_union_coe_submodule : (adjoin R (s ∪ t) : submodule R A) =
   (adjoin R s) * (adjoin R t) :=
 begin
@@ -98,12 +106,22 @@ begin
   rw monoid.mem_closure_union_iff,
   split;
   { rintro ⟨y, hys, z, hzt, rfl⟩, exact ⟨_, hys, _, hzt, rfl⟩ }
+=======
+theorem madjoin_union : (adjoin R (s ∪ t)).to_submodule =
+  (adjoin R s).to_submodule * (adjoin R t).to_submodule :=
+begin
+  rw [madjoin_eq_span, madjoin_eq_span, madjoin_eq_span, span_mul_span], congr' 1, ext z,
+  rw monoid.mem_closure_union_iff, split,
+  { rintro ⟨y, hys, z, hzt, rfl⟩, exact ⟨(_, _), ⟨hys, hzt⟩, rfl⟩ },
+  { rintro ⟨⟨y, z⟩, ⟨hys, hzt⟩, rfl⟩, exact ⟨_, hys, _, hzt, rfl⟩ }
+>>>>>>> comm/integral-closure
 end
 variables {R s t}
 
 theorem adjoin_int (s : set R) : adjoin ℤ s = subalgebra_of_subring (ring.closure s) :=
 le_antisymm (adjoin_le subset_closure) (closure_subset subset_adjoin)
 
+<<<<<<< HEAD
 local attribute [instance] set.pointwise_mul_semiring
 
 theorem fg_trans (h1 : (adjoin R s : submodule R A).fg)
@@ -137,6 +155,32 @@ begin
     rw [lc.total_apply, finsupp.sum_mul], refine sum_mem _ _,
     intros t ht, change _ * _ ∈ _, rw smul_mul_assoc, refine smul_mem _ _ _,
     exact subset_span ⟨t, hlp ht, z, hlq hz, rfl⟩ }
+=======
+theorem fg_trans (h1 : (adjoin R s).to_submodule.fg) (h2 : (adjoin (adjoin R s) t).to_submodule.fg) :
+  (adjoin R (s ∪ t)).to_submodule.fg :=
+begin
+  rcases fg_def.1 h1 with ⟨p, hp, hp'⟩,
+  rcases fg_def.1 h2 with ⟨q, hq, hq'⟩,
+  refine fg_def.2 ⟨set.image (λ z : A × A, z.1 * z.2) (p.prod q),
+    set.finite_image _ (set.finite_prod hp hq), le_antisymm _ _⟩,
+  { rw [span_le, set.image_subset_iff], rintros ⟨x, y⟩ ⟨hx, hy⟩,
+    change x * y ∈ _, refine is_submonoid.mul_mem _ _,
+    { have : x ∈ (adjoin R s).to_submodule, { rw ← hp', exact subset_span hx },
+      exact adjoin_mono (set.subset_union_left _ _) this },
+    have : y ∈ (adjoin (adjoin R s) t).to_submodule, { rw ← hq', exact subset_span hy },
+    change y ∈ adjoin R (s ∪ t), rw adjoin_union, exact this },
+  intros r hr, change r ∈ adjoin R (s ∪ t) at hr, rw adjoin_union at hr,
+  change r ∈ (adjoin (adjoin R s) t).to_submodule at hr,
+  rw [← hq', mem_span_iff_lc] at hr, rcases hr with ⟨l, hlq, rfl⟩,
+  haveI := classical.dec_eq A,
+  rw [lc.total_apply, finsupp.sum, mem_coe], refine sum_mem _ _,
+  intros z hz, change (l z).1 * _ ∈ _,
+  have : (l z).1 ∈ (adjoin R s).to_submodule := (l z).2,
+  rw [← hp', mem_span_iff_lc] at this, rcases this with ⟨l2, hlp, hl⟩, rw ← hl,
+  rw [lc.total_apply, finsupp.sum_mul], refine sum_mem _ _,
+  intros t ht, change _ * _ ∈ _, rw smul_mul_assoc, refine smul_mem _ _ _,
+  exact subset_span ⟨⟨t, z⟩, ⟨hlp ht, hlq hz⟩, rfl⟩
+>>>>>>> comm/integral-closure
 end
 
 end algebra
@@ -161,13 +205,20 @@ end subalgebra
 variables {R : Type u} {A : Type v} {B : Type w}
 variables [comm_ring R] [comm_ring A] [comm_ring B] [algebra R A] [algebra R B]
 
+<<<<<<< HEAD
 instance alg_hom.is_noetherian_ring_range (f : A →ₐ[R] B) [is_noetherian_ring A] :
   is_noetherian_ring f.range :=
 is_noetherian_ring_range f
+=======
+theorem alg_hom.is_noetherian_ring_range (f : A →ₐ[R] B)
+  (h : is_noetherian_ring A) : is_noetherian_ring f.range :=
+is_noetherian_ring_range f _ h
+>>>>>>> comm/integral-closure
 
 variables [decidable_eq R] [decidable_eq A]
 
 theorem is_noetherian_ring_of_fg {S : subalgebra R A} (HS : S.fg)
+<<<<<<< HEAD
   [is_noetherian_ring R] : is_noetherian_ring S :=
 let ⟨t, ht⟩ := HS in ht ▸ (algebra.adjoin_eq_range R (↑t : set A)).symm ▸
 by haveI : is_noetherian_ring (mv_polynomial (↑t : set A) R) :=
@@ -178,3 +229,13 @@ theorem is_noetherian_ring_closure (s : set R) (hs : s.finite) :
   is_noetherian_ring (ring.closure s) :=
 show is_noetherian_ring (subalgebra_of_subring (ring.closure s)), from
 algebra.adjoin_int s ▸ is_noetherian_ring_of_fg (subalgebra.fg_def.2 ⟨s, hs, rfl⟩)
+=======
+  (h : is_noetherian_ring R) : is_noetherian_ring S :=
+let ⟨t, ht⟩ := HS in ht ▸ (algebra.adjoin_eq_range R (↑t : set A)).symm ▸
+alg_hom.is_noetherian_ring_range (mv_polynomial.aeval R A ↑t)
+  (is_noetherian_ring_mv_polynomial_of_fintype h)
+
+theorem is_noetherian_ring_closure (s : set R) (hs : s.finite) : is_noetherian_ring (ring.closure s) :=
+show is_noetherian_ring (subalgebra_of_subring (ring.closure s)), from
+algebra.adjoin_int s ▸ is_noetherian_ring_of_fg (subalgebra.fg_def.2 ⟨s, hs, rfl⟩) principal_ideal_domain.is_noetherian_ring
+>>>>>>> comm/integral-closure
